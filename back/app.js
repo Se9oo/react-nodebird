@@ -6,6 +6,9 @@ const passport = require('passport');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const path = require('path');
+const hpp = require('hpp');
+const helmet = require('helmet');
+
 const postRouter = require('./routes/post');
 const postsRouter = require('./routes/posts');
 const userRouter = require('./routes/user');
@@ -16,7 +19,8 @@ const passportConfig = require('./passport');
 dotenv.config();
 
 const app = express();
-db.sequelize.sync()
+db.sequelize
+  .sync()
   .then(() => {
     console.log('db연결 성공');
   })
@@ -24,15 +28,23 @@ db.sequelize.sync()
 
 passportConfig();
 
-app.use(morgan('dev'));
 //prod
 // app.use(cors({
 //   origin: 'https://nodebird.com'
 // }))
-app.use(cors({
-  origin: 'http://localhost:3060',
-  credentials: true,
-}));
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined'));
+  app.use(hpp());
+  app.use(helmet());
+} else {
+  app.use(morgan('dev'));
+}
+app.use(
+  cors({
+    origin: ['http://localhost:3060', 'nodebird.com'],
+    credentials: true,
+  })
+);
 // localhost:3065/__dirname : 현재 폴더/uploads
 app.use('/', express.static(path.join(__dirname, 'uploads')));
 // json post 방식
@@ -40,11 +52,13 @@ app.use(express.json());
 // form submit -> url encoded 방식
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser('nodebirdsecret'));
-app.use(session({
-  saveUninitialized: false,
-  resave: false,
-  secret: process.env.COOKIE_SECRET,
-}));
+app.use(
+  session({
+    saveUninitialized: false,
+    resave: false,
+    secret: process.env.COOKIE_SECRET,
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 
