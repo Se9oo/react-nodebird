@@ -11,8 +11,9 @@ import FollowList from '../components/FollowList';
 import NicknameEditForm from '../components/NicknameEditForm';
 import { LOAD_FOLLOWERS_REQUEST, LOAD_FOLLOWINGS_REQUEST, LOAD_MY_INFO_REQUEST } from '../reducers/user';
 import wrapper from '../store/configureStore';
+import { backUrl } from '../config/config';
 
-const fetcher = (url) => axios.get(url, { withCredentials: true}).then((result) => result.data);
+const fetcher = (url) => axios.get(url, { withCredentials: true }).then((result) => result.data);
 
 const Profile = () => {
   const { me } = useSelector((state) => state.user);
@@ -20,8 +21,14 @@ const Profile = () => {
   const [followingsLimit, setFollowingsLimit] = useState(3);
 
   // data, error 둘다 없으면 로딩중
-  const { data: followersData, error: followersError } = useSWR(`http://localhost:3065/user/followers?limit=${followersLimit}`, fetcher);
-  const { data: followingsData, error: followingsError } = useSWR(`http://localhost:3065/user/followings?limit=${followingsLimit}`, fetcher);
+  const { data: followersData, error: followersError } = useSWR(
+    `${backUrl}/user/followers?limit=${followersLimit}`,
+    fetcher
+  );
+  const { data: followingsData, error: followingsError } = useSWR(
+    `${backUrl}/user/followings?limit=${followingsLimit}`,
+    fetcher
+  );
 
   // 리다이렉트
   useEffect(() => {
@@ -55,8 +62,18 @@ const Profile = () => {
       </Head>
       <AppLayout>
         <NicknameEditForm />
-        <FollowList header="팔로잉" data={followingsData} onClickMore={loadMoreFollowings} loading={!followingsData && !followingsError} />
-        <FollowList header="팔로워" data={followersData} onClickMore={loadMoreFollowers} loading={!followersData && !followersError} />
+        <FollowList
+          header="팔로잉"
+          data={followingsData}
+          onClickMore={loadMoreFollowings}
+          loading={!followingsData && !followingsError}
+        />
+        <FollowList
+          header="팔로워"
+          data={followersData}
+          onClickMore={loadMoreFollowers}
+          loading={!followersData && !followersError}
+        />
       </AppLayout>
     </>
   );
